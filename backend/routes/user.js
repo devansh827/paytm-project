@@ -1,5 +1,8 @@
 const express = require('express');
 const {authMiddleware}=require("../middleware")
+const { User, Account } = require("../db");
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config");
  const zod=require("zod");
 // Single routing
 const router = express.Router();
@@ -17,39 +20,51 @@ let updateBody= zod.object({
     lastName :zod.string()
 })
 router.post('/signup', async (req, res) => {
-    const body=req.body;
     const {success}=signupSchema.safeParse(req.body);
-    let {username, password,firstName,lastName} = req.headers;
      
     if(!success){
         return res.json({
             message:"incorrect inputs"
         })
     }
+    
     try{
-        let existingUser = await User.findOne({username : username});
+        console.log("iski bkchut")
+        const existingUser = await User.findOne({username : req.body.username});
+        console.log(existingUser)
         if(existingUser){
-            res.status(411).json("user already exists");
+            return res.status(411).json("user already exists");
         } else{
-            let obj = new User({
-                username,
-                password,
-                firstName,
-                lastName
-            });
-            let dbUser = await obj.save();
-            const token=jwt.sign({
-                userId:dbUser._id
-            },JWT_SECRET);
-          
+            console.log("sexy bitch")
+            const user = await User.create({
+                username: req.body.username,
+                password: req.body.password,
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+            })
+
+            console.log(user)
+            const userId = user._id;
+            console.log(userId)
+        
+            await Account.create({
+                userId,
+                balance: 1 + Math.random() * 10000
+            })
+        
+            const token = jwt.sign({
+                userId
+            }, JWT_SECRET);
+        
             res.json({
-                message:"user created successfully",
-                token:token
+                message: "User created successfully",
+                token: token
             })
            
         }
     } catch(err){
-        res.status(501).json("internal server error");
+        console.log(err)
+        return res.status(501).json("internal server error");
     }
 
 
@@ -59,14 +74,14 @@ router.post('/signup', async (req, res) => {
 router.post('/signin', async (req, res) => {
     let {username, password} = req.body;
 
-  
     try{
         let instance = await User.findOne({username : username});
-      
         if(instance){
             if(instance.username == username && instance.password == password){
-                const token = jwt.sign({username : username}, jwtPassword);
-                
+                const token = jwt.sign({
+                    userId: instance._id
+                }, JWT_SECRET);
+                console.log(token)
                 res.status(211).json({token : token});
             } else{
                 res.status(411).json("password is incorrect");
@@ -75,11 +90,12 @@ router.post('/signin', async (req, res) => {
             res.status(411).json("username doesn't exist please signup");
         }
     } catch(err){
+        console.log(err)
         res.status(511).json("internal server error");
     }
 });
 
-router.put('/',authMiddleware,async(req,res)=>{
+router.put('/',authMiddleware,async (req,res)=>{
  const{success}=updateBody.safeParse(req.body)
 
  if(!success){

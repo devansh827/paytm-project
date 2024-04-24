@@ -4,5 +4,5 @@ const userRouter=require("./user")
 // Single routing
 const router = express.Router();
 
-app.use('/user',userRouter);
+router.use('/user',userRouter);
 module.exports=router;
