@@ -29,13 +29,11 @@ router.post('/signup', async (req, res) => {
     }
     
     try{
-        console.log("iski bkchut")
         const existingUser = await User.findOne({username : req.body.username});
         console.log(existingUser)
         if(existingUser){
             return res.status(411).json("user already exists");
         } else{
-            console.log("sexy bitch")
             const user = await User.create({
                 username: req.body.username,
                 password: req.body.password,
@@ -130,7 +128,7 @@ router.get("/bulk",async(req,res)=>{
         }]
     })
 
-    res.json({
+    return res.json({
         user:users.map(user=>({
             username:user.username,
             firstName:user.firstName,
