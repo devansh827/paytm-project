@@ -8,7 +8,7 @@ export const SuccessPage = () => {
         const timeoutId = setTimeout(() => {
             // Navigate to dashboard after 10 seconds
             navigate("/dashboard");
-        }, 5000); // 10 seconds
+        }, 5000); 
 
         return () => clearTimeout(timeoutId);
     }, [navigate]);
