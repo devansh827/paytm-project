@@ -15,9 +15,9 @@ let signupSchema = zod.object({
 })
 
 let updateBody= zod.object({
-    password: zod.string(),
-  firstName: zod.string(),
-    lastName :zod.string()
+    password: zod.string().optional(),
+  firstName: zod.string().optional(),
+    lastName :zod.string().optional()
 })
 router.post('/signup', async (req, res) => {
     const {success}=signupSchema.safeParse(req.body);
@@ -102,9 +102,9 @@ router.put('/',authMiddleware,async (req,res)=>{
     })
  }
 
- await User.updateOne(req.body,{
-    id:req.userId
- })
+ const response=await User.updateOne({_id:req.userId},req.body)
+
+ console.log(response)
 
  res.json({
     message:"updated successfully"
